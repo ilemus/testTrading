@@ -1,0 +1,7 @@
+
+/**
+ * @author ilemu
+ *
+ */
+module AutomatedTrading {
+}
