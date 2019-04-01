@@ -66,7 +66,12 @@ public class TradingDummy implements TradingApi {
                         transactions.add(order);
                         if (portfolio.containsKey(order.symbol)) {
                             Position o = portfolio.get(order.symbol);
-                            if (order.shares <= 0) o.shares -= order.shares;
+                            if (order.shares <= 0) {
+                                o.shares += order.shares;
+                                // TODO: SHORTING BEHAVIOR???
+                                if (o.shares == 0) portfolio.remove(order.symbol);
+                                continue;
+                            }
                             double actualPrice = (o.price * o.shares + order.price * order.shares) / (order.shares + o.shares);
                             o.price = actualPrice;
                             o.shares += order.shares;

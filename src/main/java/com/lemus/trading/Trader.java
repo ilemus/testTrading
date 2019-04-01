@@ -85,6 +85,12 @@ public class Trader {
             case PENDING:
                 System.out.println(mApi.getPendingOrders());
                 break;
+            case MARKET_SELL:
+                mApi.marketSell(split[1], Integer.parseInt(split[2]));
+                break;
+            case LIMIT_SELL:
+                mApi.limitSell(split[1], Double.parseDouble(split[2]), Integer.parseInt(split[3]));
+                break;
         }
         return true;
     }
