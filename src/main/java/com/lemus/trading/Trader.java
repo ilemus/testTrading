@@ -8,6 +8,8 @@ public class Trader {
     
     public void start() {
         TradingDummy dummy = new TradingDummy();
+        dummy.login();
+
         double price = dummy.price("AAPL");
         System.out.println("Current price: " + price);
         dummy.marketBuy("AAPL", 5);
@@ -21,5 +23,6 @@ public class Trader {
                 + dummy.getPendingOrders() + " portfolio: " + dummy.portfolio);
         
         dummy.stopTradingProcessor();
+        dummy.logout();
     }
 }

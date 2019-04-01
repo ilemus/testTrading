@@ -1,2 +1,4 @@
 # Ignore build output dir
 build
+.gradle/
+portfolio.dat

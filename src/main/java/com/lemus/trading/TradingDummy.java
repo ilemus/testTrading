@@ -1,12 +1,18 @@
 package com.lemus.trading;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -20,7 +26,7 @@ public class TradingDummy implements TradingApi {
     private double buyingPower = 0.0;
     
     List<Order> transactions = new ArrayList<Order>();
-    List<Position> portfolio = new ArrayList<Position>();
+    Map<String, Position> portfolio = new HashMap<String, Position>();
     BlockingQueue<Order> orders = new LinkedBlockingQueue<Order>();
     
     public TradingDummy() {
@@ -46,8 +52,17 @@ public class TradingDummy implements TradingApi {
                             continue;
                         
                         transactions.add(order);
-                        portfolio.add(new Position(order));
+                        if (portfolio.containsKey(order.symbol)) {
+                            Position o = portfolio.get(order.symbol);
+                            if (order.shares <= 0) o.shares -= order.shares;
+                            double actualPrice = (o.price * o.shares + order.price * order.shares) / (order.shares + o.shares);
+                            o.price = actualPrice;
+                            o.shares += order.shares;
+                        } else {
+                            portfolio.put(order.symbol, new Position(order));
+                        }
                     } catch (InterruptedException e) {
+                        break;
                     }
                 }
             }
@@ -72,6 +87,95 @@ public class TradingDummy implements TradingApi {
             e.printStackTrace();
             return -1.0;
         }
+    }
+
+    private void savePortfolio() throws IOException {
+        File file = new File("portfolio.dat");
+        if (!file.exists()) file.createNewFile();
+
+        FileWriter fw = new FileWriter(file.getAbsoluteFile());
+        BufferedWriter bw = new BufferedWriter(fw);
+
+        // Transactions
+        for (Order order : transactions) {
+            bw.write(order.toString());
+            bw.newLine();
+        }
+
+        // Portfolio
+        bw.write("*");
+        bw.newLine();
+
+        for (Map.Entry<String, Position> pos : portfolio.entrySet()) {
+            bw.write(pos.getValue().toString());
+            bw.newLine();
+        }
+
+        // Pending orders
+        bw.write("*");
+        bw.newLine();
+
+        for (Order order : orders) {
+            bw.write(order.toString());
+            bw.newLine();
+        }
+
+        // End of file
+        bw.write("*");
+        bw.newLine();
+
+        bw.close();
+    }
+
+    private void loadPortfolio() throws IOException {
+        File file = new File("portfolio.dat");
+        if (!file.exists()) return;
+
+        FileReader fr = new FileReader(file.getAbsoluteFile());
+        BufferedReader br = new BufferedReader(fr);
+        String line;
+
+        // Transactions
+        while ((line = br.readLine()) != null) {
+            if (line.startsWith("*")) break;
+
+            Order order = new Order(line);
+            transactions.add(order);
+        }
+        // Portfolio
+        while ((line = br.readLine()) != null) {
+            if (line.startsWith("*")) break;
+
+            Position pos = new Position(line);
+            portfolio.put(pos.symbol, pos);
+        }
+        // Pending orders
+        while ((line = br.readLine()) != null) {
+            if (line.startsWith("*")) break;
+
+            Order order = new Order(line);
+            orders.add(order);
+        }
+    }
+
+    @Override
+    public boolean login() {
+        try {
+            loadPortfolio();
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    @Override
+    public boolean logout() {
+        try {
+            savePortfolio();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     @Override

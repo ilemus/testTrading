@@ -3,6 +3,9 @@ package com.lemus.trading;
 import java.util.List;
 
 public abstract interface TradingApi {
+    public boolean login();
+    public boolean logout();
+
     public double price(String symbol);
     public void limitBuy(String symbol, double price, int shares);
     public void marketBuy(String symbol, int shares);
@@ -20,6 +23,14 @@ public abstract interface TradingApi {
         String symbol;
         int shares;
         double price;
+        public Order(String serialized) {
+            String sub = serialized.substring(1, serialized.length() - 1);
+            String[] split = sub.split(", ");
+            this.symbol = split[0];
+            this.shares = Integer.parseInt(split[1]);
+            this.price = Double.parseDouble(split[2]);
+        }
+
         public Order(String symbol, int shares) {
             this.symbol = symbol;
             this.shares = shares;
@@ -34,6 +45,13 @@ public abstract interface TradingApi {
         String symbol;
         int shares;
         double price;
+        public Position(String serialized) {
+            String sub = serialized.substring(1, serialized.length() - 1);
+            String[] split = sub.split(", ");
+            this.symbol = split[0];
+            this.shares = Integer.parseInt(split[1]);
+            this.price = Double.parseDouble(split[2]);
+        }
         public Position(Order o) {
             this.symbol = o.symbol;
             this.shares = o.shares;
