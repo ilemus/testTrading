@@ -48,7 +48,6 @@ public class TradingDummy implements TradingApi {
                         transactions.add(order);
                         portfolio.add(new Position(order));
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
                     }
                 }
             }
