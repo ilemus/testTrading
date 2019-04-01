@@ -21,7 +21,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class TradingDummy implements TradingApi {
     private static final String PRICE_REQUEST_FORMAT = "https://api.iextrading.com/1.0/stock/%s/price";
-    
+    private boolean loggedIn = false;
     private double balance = 0.0;
     private double buyingPower = 0.0;
     
@@ -48,8 +48,20 @@ public class TradingDummy implements TradingApi {
                             order.price = price(order.symbol);
                         else if (currentPrice <= order.price)
                             order.price = currentPrice;
-                        else
+                        else {
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    try {
+                                        Thread.sleep(1000);
+                                        orders.offer(order);
+                                    } catch (InterruptedException e) {
+                                        orders.offer(order);
+                                    }
+                                }
+                            }).start();
                             continue;
+                        }
                         
                         transactions.add(order);
                         if (portfolio.containsKey(order.symbol)) {
@@ -165,17 +177,18 @@ public class TradingDummy implements TradingApi {
         } catch(IOException e) {
             e.printStackTrace();
         }
+        loggedIn = true;
         return true;
     }
 
     @Override
-    public boolean logout() {
+    public void logout() {
         try {
             savePortfolio();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return true;
+        loggedIn = false;
     }
 
     @Override
@@ -199,6 +212,10 @@ public class TradingDummy implements TradingApi {
     @Override
     public void marketBuy(String symbol, int shares) {
         // TODO Auto-generated method stub
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return;
+        }
         Order order = new Order(symbol, shares);
         orders.offer(order);
     }
@@ -206,23 +223,39 @@ public class TradingDummy implements TradingApi {
     @Override
     public void marketSell(String symbol, int shares) {
         // TODO Auto-generated method stub
-        
+         if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return;
+        }       
     }
 
     @Override
     public void limitBuy(String symbol, double price, int shares) {
         // TODO Auto-generated method stub
-        
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return;
+        }
+        Order order = new Order(symbol, shares);
+        order.price = price;
+        orders.offer(order);
     }
 
     @Override
     public void limitSell(String symbol, double price, int shares) {
         // TODO Auto-generated method stub
-        
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return;
+        }
     }
 
     @Override
     public List<Order> getPendingOrders() {
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return null;
+        }
         List<Order> os = new ArrayList<Order>();
         for (Order order : orders) {
             os.add(order);
@@ -232,22 +265,52 @@ public class TradingDummy implements TradingApi {
 
     @Override
     public List<Order> getTransactions() {
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return null;
+        }
         return transactions;
     }
 
     @Override
+    public List<Position> getPortfolio() {
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return null;
+        }
+        List<Position> result = new ArrayList<Position>();
+        for (Map.Entry<String, Position> entry : portfolio.entrySet()) {
+            result.add(entry.getValue());
+        }
+
+        return result;
+    }
+
+    @Override
     public void addMoney(double amount) {
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return;
+        }
         balance += amount;
         buyingPower += amount;
     }
 
     @Override
     public synchronized double balance() {
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return 0.0;
+        }
         return balance;
     }
     
     @Override
     public synchronized double buyingPower() {
+        if (!loggedIn) {
+            System.out.println("Not logged in!");
+            return 0.0;
+        }
         return buyingPower;
     }
 }

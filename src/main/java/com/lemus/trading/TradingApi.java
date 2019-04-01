@@ -4,7 +4,7 @@ import java.util.List;
 
 public abstract interface TradingApi {
     public boolean login();
-    public boolean logout();
+    public void logout();
 
     public double price(String symbol);
     public void limitBuy(String symbol, double price, int shares);
@@ -14,6 +14,7 @@ public abstract interface TradingApi {
     
     public List<Order> getPendingOrders();
     public List<Order> getTransactions();
+    public List<Position> getPortfolio();
     
     public void addMoney(double amount);
     public double buyingPower();
